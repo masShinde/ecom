@@ -1,11 +1,10 @@
 package com.shopme.ecom.entities;
 
-import com.shopme.ecom.utils.ResponseType;
+import com.shopme.ecom.enums.ResponseType;
 import jakarta.persistence.Enumerated;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class CommonResponse {
@@ -31,7 +30,7 @@ public class CommonResponse {
         this.status = status;
     }
 
-    public CommonResponse(long timestamp, int statusCode, String message, ResponseType status, HashMap data) {
+    public CommonResponse(long timestamp, int statusCode, String message, ResponseType status, HashMap<String, ?> data) {
         this.timestamp = timestamp;
         this.statusCode = statusCode;
         this.message = message;

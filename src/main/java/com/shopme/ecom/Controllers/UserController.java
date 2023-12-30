@@ -2,17 +2,14 @@ package com.shopme.ecom.Controllers;
 
 import com.shopme.ecom.entities.CommonResponse;
 import com.shopme.ecom.entities.User;
+import com.shopme.ecom.enums.ResponseType;
 import com.shopme.ecom.services.UserService;
 import com.shopme.ecom.utils.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,14 +57,7 @@ public class UserController {
 
     @PostMapping("/users/profile")
     public ResponseEntity<CommonResponse> uploadUserImage(@RequestParam int id, @RequestParam(name = "file") MultipartFile multipartFile) throws IOException {
-        String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
-        String uploadDir = "user-photos/" + id ;
-        if(!multipartFile.isEmpty()){
-            FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
-            User user = userService.findUserById(id);
-            user.setPhotos(uploadDir+"/"+fileName);
-            updateUser(user);
-        }
+        userService.updateProfileImage(id, multipartFile);
         CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Profile Image Updated Successfully.", ResponseType.Sucess);
         return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
     }

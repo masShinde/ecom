@@ -1,4 +1,4 @@
-package com.shopme.ecom.utils;
+package com.shopme.ecom.enums;
 
 public enum ResponseType {
     Sucess,

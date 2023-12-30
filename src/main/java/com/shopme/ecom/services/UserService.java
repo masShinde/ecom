@@ -4,10 +4,12 @@ import com.shopme.ecom.admin.user.RoleRepository;
 import com.shopme.ecom.admin.user.UserRepository;
 import com.shopme.ecom.entities.Role;
 import com.shopme.ecom.entities.User;
+import com.shopme.ecom.exceptions.CommonExceptions.InvalidImageException;
 import com.shopme.ecom.exceptions.userExceptions.UserAlreadyExistsException;
 import com.shopme.ecom.exceptions.userExceptions.UserCreateException;
 import com.shopme.ecom.exceptions.userExceptions.UserInternalException;
 import com.shopme.ecom.exceptions.userExceptions.UserNotFoundException;
+import com.shopme.ecom.utils.FileUploadUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -71,6 +75,23 @@ public class UserService {
             return userRepository.save(user);
         }catch (Exception ex){
             throw new UserCreateException("Error While updating the user! Please try again.");
+        }
+    }
+
+    public void updateProfileImage(int id, MultipartFile multipartFile){
+        String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
+        String uploadDir = "user-photos/" + id ;
+        if(!multipartFile.isEmpty()){
+            try {
+                FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
+                User user = findUserById(id);
+                user.setPhotos(uploadDir+"/"+fileName);
+                updateUser(user);
+            }catch (Exception ex){
+                throw new UserInternalException("Error while updating profile photo! Please try again.");
+            }
+        }else{
+            throw new InvalidImageException("Please provide valid image!");
         }
     }
 
