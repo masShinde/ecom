@@ -35,8 +35,8 @@ public class BrandController {
     }
 
 
-    @GetMapping("/brands/id")
-    public ResponseEntity<CommonResponse> getBrandById(@RequestParam Integer id){
+    @GetMapping("/brands/{id}")
+    public ResponseEntity<CommonResponse> getBrandById(@PathVariable Integer id){
         Brand brand = brandService.getBrandById(id);
         HashMap<String, Brand> res = new HashMap<>();
         res.put("brand", brand);
