@@ -1,7 +1,13 @@
 package com.shopme.ecom.services;
 
 
+import com.shopme.ecom.admin.user.BrandRepository;
+import com.shopme.ecom.admin.user.CategoryRepository;
 import com.shopme.ecom.admin.user.ProductRepository;
+import com.shopme.ecom.dto.productDtos.CreateProductRequest;
+import com.shopme.ecom.dto.productDtos.UpdateProductRequest;
+import com.shopme.ecom.entities.Brand;
+import com.shopme.ecom.entities.Category;
 import com.shopme.ecom.entities.Product;
 import com.shopme.ecom.enums.SortDirections;
 import com.shopme.ecom.exceptions.CategoryExceptions.CategoryInternalException;
@@ -18,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +33,12 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private BrandService brandService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     private Integer pageNum = 1;
     private Integer pageSize = 7;
@@ -72,10 +85,27 @@ public class ProductService {
         }
     }
 
-    public Product createNewProduct(Product product){
-        checkIfUniqueProduct(product);
+    public Product createNewProduct(CreateProductRequest product){
+        Product newProduct = new Product();
+        Brand associatedBrand = brandService.getBrandById(product.getBrand());
+        Category associatedCategory = categoryService.findCategoryById(product.getCategory());
+        newProduct.setName(product.getName());
+        newProduct.setAlias(product.getAlias());
+        newProduct.setShortDescription(product.getShortDescription());
+        newProduct.setFullDescription(product.getFullDescription());
+        newProduct.setPhotos(product.getPhotos());
+        newProduct.setBrand(associatedBrand);
+        newProduct.setCost(product.getCost());
+        newProduct.setEnabled(product.isEnabled());
+        newProduct.setCategory(associatedCategory);
+        newProduct.setDiscountPercent(product.getDiscountPercent());
+        newProduct.setPrice(product.getPrice());
+        newProduct.setInStock(product.isInStock());
+        newProduct.setCreatedTime(new Date());
+        newProduct.setUpdatedTime(new Date());
+        checkIfUniqueProduct(newProduct);
         try{
-            return productRepository.save(product);
+            return productRepository.save(newProduct);
         }catch(Exception ex){
             throw new ProductInternalErrorException("Error while saving Product! Please try again.");
         }
@@ -89,10 +119,25 @@ public class ProductService {
         }
     }
 
-    public Product updateProduct(Product product){
-        checkIfUniqueProduct(product);
+    public Product updateProduct(UpdateProductRequest product){
+        Product requestedProduct = getProductById(product.getId());
+        Category associatedCategory = categoryService.findCategoryById(product.getCategory());
+        Brand associateBrand = brandService.getBrandById(product.getBrand());
+        requestedProduct.setUpdatedTime(new Date());
+        requestedProduct.setInStock(product.isInStock());
+        requestedProduct.setDiscountPercent(product.getDiscountPercent());
+        requestedProduct.setPrice(product.getPrice());
+        requestedProduct.setCost(product.getCost());
+        requestedProduct.setCategory(associatedCategory);
+        requestedProduct.setBrand(associateBrand);
+        requestedProduct.setName(product.getName());
+        requestedProduct.setEnabled(product.isEnabled());
+        requestedProduct.setFullDescription(product.getFullDescription());
+        requestedProduct.setShortDescription(product.getShortDescription());
+        requestedProduct.setAlias(product.getAlias());
+        checkIfUniqueProduct(requestedProduct);
         try{
-            return productRepository.save(product);
+            return productRepository.save(requestedProduct);
         }catch (Exception ex){
             throw new ProductInternalErrorException("Error while Updating Product! Please try again.");
         }
@@ -107,7 +152,7 @@ public class ProductService {
         try {
             FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
             product.setPhotos(uploadDir+"/"+fileName);
-            updateProduct(product);
+            productRepository.save(product);
         }catch (Exception ex){
             throw new ProductInternalErrorException("Error while Updating Product Image! Please try again.");
         }

@@ -1,16 +1,16 @@
-package com.shopme.ecom.Controllers;
+package com.shopme.ecom.controllers;
 
 
-import com.shopme.ecom.entities.CommonResponse;
+import com.shopme.ecom.dto.productDtos.CreateProductRequest;
+import com.shopme.ecom.dto.productDtos.UpdateProductRequest;
 import com.shopme.ecom.entities.Product;
-import com.shopme.ecom.enums.ResponseType;
+import com.shopme.ecom.entities.SuccessResponse;
 import com.shopme.ecom.enums.SortDirections;
 import com.shopme.ecom.services.ProductService;
-import com.shopme.ecom.utils.CommonUtilities;
+import com.shopme.ecom.utils.ResponseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-@Controller
+@RestController
 @RequestMapping("/api")
 public class ProductController {
 
@@ -26,10 +26,10 @@ public class ProductController {
     private ProductService productService;
 
     @Autowired
-    private CommonUtilities commonUtilities;
+    private ResponseHandler responseHandler;
 
     @GetMapping("/products")
-    public ResponseEntity<CommonResponse> getAllProducts(
+    public ResponseEntity<SuccessResponse> getAllProducts(
             @RequestParam Optional<Integer> pageSize,
             @RequestParam Optional<Integer> pageNum,
             @RequestParam Optional<String> sortBy,
@@ -38,44 +38,39 @@ public class ProductController {
         List<Product> productList = productService.getAllProducts( pageSize, pageNum, sortBy, sortDir);
         HashMap<String, List<Product>> res = new HashMap<>();
         res.put("products", productList);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Products Fetched Successfully!", ResponseType.Sucess,  res );
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Products Fetched Successfully!");
     }
 
     @GetMapping("/products/{id}")
-    public ResponseEntity<CommonResponse> getProductById(@PathVariable Integer id){
+    public ResponseEntity<SuccessResponse> getProductById(@PathVariable Integer id){
         Product product = productService.getProductById(id);
         HashMap<String, Product> res = new HashMap<>();
         res.put("product", product);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Product Fetched Successfully!", ResponseType.Sucess, res);
-        return  new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Product Fetched Successfully!");
     }
 
     @PostMapping("/products")
-    public ResponseEntity<CommonResponse> createNewProduct(@RequestBody Product product){
+    public ResponseEntity<SuccessResponse> createNewProduct(@RequestBody CreateProductRequest product){
         Product savedProduct = productService.createNewProduct(product);
         HashMap<String, Product> res = new HashMap<>();
-        res.put("product", product);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.CREATED.value(), "Product Created Successfully!", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.CREATED);
+        res.put("product", savedProduct);
+        return responseHandler.handleResponse(HttpStatus.CREATED, res, "Products Created Successfully!");
     }
 
     @DeleteMapping("/products")
-    public ResponseEntity<CommonResponse> deleteProductById(@RequestParam Integer id){
+    public ResponseEntity<SuccessResponse> deleteProductById(@RequestParam Integer id){
         productService.deleteProductById(id);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Product Deleted Successfully!", ResponseType.Sucess);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "Products Deleted Successfully!");
     }
 
     @PostMapping("/products/image")
-    public ResponseEntity<CommonResponse> updateProductImage(@RequestParam(name = "file") MultipartFile multipartFile, @RequestParam Integer id){
+    public ResponseEntity<SuccessResponse> updateProductImage(@RequestParam(name = "file") MultipartFile multipartFile, @RequestParam Integer id){
         productService.updateImage(multipartFile, id);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Product Image Updated Successfully!", ResponseType.Sucess);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "Products Image Updated Successfully!");
     }
 
     @GetMapping("/products/search")
-    public ResponseEntity<CommonResponse> searchProduct(
+    public ResponseEntity<SuccessResponse> searchProduct(
             @RequestParam String keyword,
             @RequestParam Optional<Integer> pageSize,
             @RequestParam Optional<Integer> pageNum,
@@ -84,12 +79,11 @@ public class ProductController {
         List<Product> productList = productService.searchProduct(keyword, pageSize, pageNum, sortBy, sortDir);
         HashMap<String, List<Product>> res = new HashMap<>();
         res.put("product", productList);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Product Updated Successfully!", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Products Fetched Successfully!");
     }
 
     @GetMapping("/products/search/{categoryId}")
-    public ResponseEntity<CommonResponse> getProductsByCategoryId(
+    public ResponseEntity<SuccessResponse> getProductsByCategoryId(
             @PathVariable Integer categoryId,
             @RequestParam Optional<Integer> pageSize,
             @RequestParam Optional<Integer> pageNum
@@ -97,17 +91,15 @@ public class ProductController {
         List<Product> productList = productService.getProductsByCategoryId( categoryId, pageSize, pageNum);
         HashMap<String, List<Product>> res = new HashMap<>();
         res.put("products", productList);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Products Fetched Successfully!", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Products Fetched Successfully!");
 
     }
 
     @PutMapping("/products")
-    public ResponseEntity<CommonResponse> updateProduct(@RequestBody Product product){
+    public ResponseEntity<SuccessResponse> updateProduct(@RequestBody UpdateProductRequest product){
         Product updatedProduct = productService.updateProduct(product);
         HashMap<String, Product> res = new HashMap<>();
-        res.put("product", product);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Product Updated Successfully!", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        res.put("product", updatedProduct);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Products Updated Successfully!");
     }
 }

@@ -1,8 +1,9 @@
-package com.shopme.ecom.Controllers;
+package com.shopme.ecom.controllers;
 
-import com.shopme.ecom.entities.CommonResponse;
+import com.shopme.ecom.dto.userDtos.CreateUserRequest;
+import com.shopme.ecom.dto.userDtos.UpdateUserRequest;
+import com.shopme.ecom.entities.SuccessResponse;
 import com.shopme.ecom.entities.User;
-import com.shopme.ecom.enums.ResponseType;
 import com.shopme.ecom.services.UserService;
 import com.shopme.ecom.utils.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,72 +27,66 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private CommonUtilities commonUtilities;
+    private ResponseHandler responseHandler;
 
     @GetMapping("/users")
-    public ResponseEntity<CommonResponse> getAllUsers(){
+    public ResponseEntity<SuccessResponse> getAllUsers(){
         List<User> users = userService.listAllUsers();
         HashMap<String, List<User>> res = new HashMap<>();
         res.put("users", users);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Users fetched Successfully", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Users Fetched Successfully!");
     }
 
     @GetMapping("/users/pages")
-    public ResponseEntity<CommonResponse> getUsersByPage(@RequestParam int pageNum, @RequestParam int pageSize, @RequestParam String sortField, @RequestParam String sortDir , @RequestParam String keyword){
+    public ResponseEntity<SuccessResponse> getUsersByPage(@RequestParam int pageNum, @RequestParam int pageSize, @RequestParam String sortField, @RequestParam String sortDir , @RequestParam String keyword){
         Page<User> page = userService.listByPage(pageNum, pageSize, sortField, sortDir, keyword);
         HashMap<String, Page<User>> res = new HashMap<>();
         res.put("users", page);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Users fetched Successfully", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Users Fetched Successfully!");
     }
 
     @PostMapping("/users")
-    public ResponseEntity<CommonResponse> createNewUser(@RequestBody User user){
+    public ResponseEntity<SuccessResponse> createNewUser(@RequestBody CreateUserRequest user){
         User savedUser = userService.saveUser(user);
         HashMap<String, User> res = new HashMap<>();
         res.put("user", savedUser);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.CREATED.value(), "User Registered Successfully", ResponseType.Sucess, res);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.CREATED);
+        return responseHandler.handleResponse(HttpStatus.CREATED, res, "Users Created Successfully!");
     }
 
     @PostMapping("/users/profile")
-    public ResponseEntity<CommonResponse> uploadUserImage(@RequestParam int id, @RequestParam(name = "file") MultipartFile multipartFile) throws IOException {
+    public ResponseEntity<SuccessResponse> uploadUserImage(@RequestParam int id, @RequestParam(name = "file") MultipartFile multipartFile) throws IOException {
         userService.updateProfileImage(id, multipartFile);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Profile Image Updated Successfully.", ResponseType.Sucess);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "Profile Image Updated Successfully!");
     }
 
     @PutMapping("/users")
-    public ResponseEntity<CommonResponse> updateUser( @RequestBody User user){
+    public ResponseEntity<SuccessResponse> updateUser( @RequestBody UpdateUserRequest user){
         User updatedUser = userService.updateUser(user);
         HashMap<String, User> res = new HashMap<>();
         res.put("user", updatedUser);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "User updated successfully.", ResponseType.Sucess, res );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "User updated successfully.");
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<CommonResponse> getUserById(@PathVariable int id){
+    public ResponseEntity<SuccessResponse> getUserById(@PathVariable int id){
         User updatedUser = userService.findUserById(id);
         HashMap<String, User> res = new HashMap<>();
         res.put("user", updatedUser);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "User fetched successfully.", ResponseType.Sucess, res );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "User Fetched successfully.");
+
     }
 
     @DeleteMapping("/users")
-    public ResponseEntity<CommonResponse> deleteUserById(@RequestParam int id){
+    public ResponseEntity<SuccessResponse> deleteUserById(@RequestParam int id){
         userService.deleteUserById(id);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "User Deleted Successfully.", ResponseType.Sucess );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "User Deleted successfully.");
     }
 
     @PutMapping("/users/enable")
-    public ResponseEntity<CommonResponse> setUserEnableStatus(@RequestParam int id, @RequestBody HashMap<String, Boolean> reqBody){
+    public ResponseEntity<SuccessResponse> setUserEnableStatus(@RequestParam int id, @RequestBody HashMap<String, Boolean> reqBody){
         userService.updateEnableStatus(id, (Boolean) reqBody.getOrDefault("isEnable", false));
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "User Updated Successfully.", ResponseType.Sucess );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "User updated successfully.");
+
     }
 
     @GetMapping("/users/csv")

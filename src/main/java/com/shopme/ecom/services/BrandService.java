@@ -1,17 +1,25 @@
 package com.shopme.ecom.services;
 
 import com.shopme.ecom.admin.user.BrandRepository;
+import com.shopme.ecom.dto.brandDtos.IBrandRequest;
+import com.shopme.ecom.dto.brandDtos.CreateBrandRequest;
+import com.shopme.ecom.dto.brandDtos.UpdateBrandRequest;
 import com.shopme.ecom.entities.Brand;
+import com.shopme.ecom.entities.Category;
 import com.shopme.ecom.exceptions.Brand.BrandBadRequestException;
 import com.shopme.ecom.exceptions.Brand.BrandInternalErrorException;
 import com.shopme.ecom.exceptions.Brand.BrandNotFoundException;
 import com.shopme.ecom.utils.FileUploadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class BrandService {
@@ -19,9 +27,16 @@ public class BrandService {
     @Autowired
     private BrandRepository brandRepository;
 
+    @Autowired
+    private CategoryService categoryService;
 
-    public List<Brand> getAllBrands(){
+    private final Integer pageNum = 1;
+    private final Integer pageSize = 5;
+
+
+    public List<Brand> getAllBrands(Optional<Integer> pageNum, Optional<Integer> pageSize){
         try{
+            Pageable pageable = PageRequest.of(pageNum.orElse(this.pageNum - 1), pageSize.orElse(this.pageSize));
             return (List<Brand>) brandRepository.findAll();
         }catch (Exception ex){
             throw new BrandInternalErrorException("Error while fetching brands! Please try again.");
@@ -41,11 +56,17 @@ public class BrandService {
         }
     }
 
-    public Brand createNewBrand(Brand newBrand){
+    public Brand createNewBrand(CreateBrandRequest newBrand){
+
         if(newBrand.getName() == null || newBrand.getLogo() == null)
             throw new BrandBadRequestException("Brand should have a name and logo!");
+
         try {
-            return brandRepository.save(newBrand);
+            Brand brand = new Brand();
+            brand.setName(newBrand.getName());
+            brand.setCategories(getAssociatedCategories(newBrand));
+            brand.setLogo(newBrand.getLogo());
+            return brandRepository.save(brand);
         }catch (Exception ex){
             throw new BrandInternalErrorException("Error while creating new Brand! Please try again.");
         }
@@ -66,11 +87,17 @@ public class BrandService {
         }
     }
 
-    public Brand updateBrand(Brand brand){
+    public Brand updateBrand(UpdateBrandRequest brand){
         if(brand.getName() == null || brand.getLogo() == null || brand.getId() == null)
             throw new BrandBadRequestException("Brand should have a name, id and logo!");
         try {
-            return brandRepository.save(brand);
+            Brand newBrand = new Brand();
+            newBrand.setName(brand.getName());
+            newBrand.setLogo(brand.getLogo());
+            newBrand.setCategories(getAssociatedCategories(brand));
+            newBrand.setId(brand.getId());
+            return brandRepository.save(newBrand);
+
         }catch (Exception ex){
             throw new BrandInternalErrorException("Error while creating new Brand! Please try again.");
         }
@@ -86,6 +113,15 @@ public class BrandService {
         }catch (Exception ex){
             throw new BrandInternalErrorException("Error while creating new Brand! Please try again.");
         }
+    }
+
+
+    private Set<Category> getAssociatedCategories(IBrandRequest brand){
+        Set<Category> associatedCategories = new HashSet<>();
+        for (Integer i: brand.getCategories()){
+            associatedCategories.add(categoryService.findCategoryById(i));
+        }
+        return associatedCategories;
     }
 
 }

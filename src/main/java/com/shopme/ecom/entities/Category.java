@@ -2,6 +2,7 @@ package com.shopme.ecom.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Builder;
 
 import java.util.HashSet;
 import java.util.Set;

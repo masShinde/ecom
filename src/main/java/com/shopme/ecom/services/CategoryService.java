@@ -1,6 +1,8 @@
 package com.shopme.ecom.services;
 
 import com.shopme.ecom.admin.user.CategoryRepository;
+import com.shopme.ecom.dto.categoryDtos.CreateCategoryRequest;
+import com.shopme.ecom.dto.categoryDtos.UpdateCategoryRequest;
 import com.shopme.ecom.entities.Category;
 import com.shopme.ecom.enums.SortDirections;
 import com.shopme.ecom.exceptions.CategoryExceptions.CategoryInternalException;
@@ -20,9 +22,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @Transactional
@@ -51,14 +51,19 @@ public class CategoryService {
         return categoryList;
     }
 
-    public Category createCategory(Category newCategory){
-        DuplicateTypes result = checkIfUnique(newCategory.getId(), newCategory.getName(), newCategory.getAlias());
+    public Category createCategory(CreateCategoryRequest newCategory){
+        DuplicateTypes result = checkIfUnique(null, newCategory.getName(), newCategory.getAlias());
         if( result == DuplicateTypes.duplicateName)
             throw new CategoryUniqueException("Category Name must be unique!");
         if(result == DuplicateTypes.duplicateAlias)
             throw new CategoryUniqueException("Category Alias must be unique!");
         try {
-            return categoryRepository.save(newCategory);
+            Category category = new Category();
+            category.setName(newCategory.getName());
+            category.setAlias(newCategory.getAlias());
+            category.setImage(newCategory.getImage());
+            category.setParent(new Category(newCategory.getParent()));
+            return categoryRepository.save(category);
         }catch (Exception ex){
             throw new CategoryInternalException("Error while saving the category! Please try again.");
         }
@@ -72,10 +77,16 @@ public class CategoryService {
         }
     }
 
-    public Category updateCategory(Category category){
-        findCategoryById(category.getId());
+    public Category updateCategory(UpdateCategoryRequest category){
+        Category requestedCategory = findCategoryById(category.getId());
+        requestedCategory.setName(category.getName());
+        requestedCategory.setAlias(category.getAlias());
+        requestedCategory.setId(category.getId());
+        requestedCategory.setImage(category.getImage());
+        requestedCategory.setParent(findCategoryById(category.getParent()));
+        requestedCategory.setEnabled(category.isEnabled());
         try{
-            return categoryRepository.save(category);
+            return categoryRepository.save(requestedCategory);
         }catch (Exception ex){
             throw new CategoryInternalException("Error while updating category! Please try again.");
         }
@@ -89,7 +100,7 @@ public class CategoryService {
                 FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
                 Category category = findCategoryById(id);
                 category.setImage(uploadDir+"/"+fileName);
-                updateCategory(category);
+                categoryRepository.save(category);
             }catch (Exception ex){
                 throw new CategoryInternalException("Error saving Image, please try again!");
             }

@@ -1,11 +1,13 @@
 package com.shopme.ecom.entities;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+
 @Table(name="brands")
 public class Brand {
 

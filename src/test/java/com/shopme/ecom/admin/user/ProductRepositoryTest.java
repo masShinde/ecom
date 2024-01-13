@@ -22,7 +22,7 @@ public class ProductRepositoryTest {
 
     @Test
     public void testCreateNewProduct(){
-        Product product = new Product("pr1", "pr2", "sd1", "fd1", photos);
+        Product product = new Product("pr1", "pr2", "sd1", "fd1");
         Product savedProduct = productRepository.save(product);
 
         assertThat(savedProduct.getId()).isGreaterThan(0);
@@ -30,8 +30,8 @@ public class ProductRepositoryTest {
 
     @Test
     public void testCreateMultipleProduct(){
-        Product p2 = new Product("p2", "p2", "s2", "f2", photos);
-        Product p3 = new Product("p3", "p3", "s3", "f3", photos);
+        Product p2 = new Product("p2", "p2", "s2", "f2");
+        Product p3 = new Product("p3", "p3", "s3", "f3");
         List<Product> products = (List<Product>) productRepository.saveAll(List.of(p2, p3));
         assertThat(products.size()).isEqualTo(2);
         assertThat(products.get(0).getId()).isGreaterThan(0);

@@ -2,6 +2,9 @@ package com.shopme.ecom.services;
 
 import com.shopme.ecom.admin.user.RoleRepository;
 import com.shopme.ecom.admin.user.UserRepository;
+import com.shopme.ecom.dto.userDtos.CreateUserRequest;
+import com.shopme.ecom.dto.userDtos.IUserRequest;
+import com.shopme.ecom.dto.userDtos.UpdateUserRequest;
 import com.shopme.ecom.entities.Role;
 import com.shopme.ecom.entities.User;
 import com.shopme.ecom.exceptions.CommonExceptions.InvalidImageException;
@@ -21,7 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -63,16 +68,22 @@ public class UserService {
         }
     }
 
-    public User updateUser(User user){
+    public User updateUser(UpdateUserRequest user){
         User existingUser = findUserById(user.getId());
         if(existingUser == null)
             throw new UserNotFoundException("User Not Found!");
         if(!existingUser.getEmail().equals(user.getEmail())  && !isEmailUnique(user.getEmail()))
             throw new UserAlreadyExistsException("User with provided email already exists.");
+        existingUser.setEmail(user.getEmail());
+        existingUser.setPhotos(user.getPhotos());
+        existingUser.setEnabled(user.isEnabled());
+        existingUser.setRoles(getAssociatedRoles(user));
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        if(user.getPassword() != null)
+            existingUser.setPassword(user.getPassword());
         try {
-            if(user.getPassword() == null)
-                user.setPassword(existingUser.getPassword());
-            return userRepository.save(user);
+            return userRepository.save(existingUser);
         }catch (Exception ex){
             throw new UserCreateException("Error While updating the user! Please try again.");
         }
@@ -86,7 +97,7 @@ public class UserService {
                 FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
                 User user = findUserById(id);
                 user.setPhotos(uploadDir+"/"+fileName);
-                updateUser(user);
+                userRepository.save(user);
             }catch (Exception ex){
                 throw new UserInternalException("Error while updating profile photo! Please try again.");
             }
@@ -96,12 +107,19 @@ public class UserService {
     }
 
 
-    public User saveUser(User user){
+    public User saveUser(CreateUserRequest user){
         if(!isEmailUnique(user.getEmail()))
             throw new UserAlreadyExistsException("User with given email already exists!");
-        encodePassword(user);
+        User newUser = new User();
+        newUser.setLastName(user.getLastName());
+        newUser.setFirstName(user.getFirstName());
+        newUser.setPassword(user.getPassword());
+        newUser.setEnabled(user.isEnabled());
+        newUser.setEmail(user.getEmail());
+        newUser.setRoles(getAssociatedRoles(user));
+        encodePassword(newUser);
         try {
-            User savedUser = userRepository.save(user);
+            User savedUser = userRepository.save(newUser);
             return savedUser;
         }catch (Exception ex){
             throw new UserCreateException("Error while registering user! Please try again.");
@@ -135,6 +153,13 @@ public class UserService {
 
     private boolean isEmailUnique(String email){
         return userRepository.getUserByEmail(email) == null;
+    }
+
+    private Set<Role> getAssociatedRoles(IUserRequest user){
+        Set<Role> associatedRoles = new HashSet<>();
+        for(Integer i: user.getRoles())
+            associatedRoles.add(new Role(i));
+        return associatedRoles;
     }
 
 }

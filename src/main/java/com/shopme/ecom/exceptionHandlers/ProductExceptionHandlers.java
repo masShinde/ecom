@@ -1,12 +1,13 @@
-package com.shopme.ecom.ExceptionHandlers;
+package com.shopme.ecom.exceptionHandlers;
 
-import com.shopme.ecom.entities.CommonResponse;
+import com.shopme.ecom.entities.FailureResponse;
 import com.shopme.ecom.enums.ResponseType;
 import com.shopme.ecom.exceptions.Products.ProductAlreadyExistsException;
 import com.shopme.ecom.exceptions.Products.ProductBadRequestException;
 import com.shopme.ecom.exceptions.Products.ProductInternalErrorException;
 import com.shopme.ecom.exceptions.Products.ProductNotFoundException;
 import com.shopme.ecom.utils.CommonUtilities;
+import com.shopme.ecom.utils.ResponseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,31 +18,27 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ProductExceptionHandlers {
 
     @Autowired
-    private CommonUtilities commonUtilities;
+    private ResponseHandler responseHandler;
 
     @ExceptionHandler
-    public ResponseEntity<CommonResponse> handlerInternalException(ProductInternalErrorException ex){
-        CommonResponse commonResponse = new CommonResponse(System.currentTimeMillis(), HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), ResponseType.Failed);
-        return new ResponseEntity<>(commonResponse, commonUtilities.getCommonHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<FailureResponse> handlerInternalException(ProductInternalErrorException ex){
+        return responseHandler.handleResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex);
     }
 
 
     @ExceptionHandler
-    public ResponseEntity<CommonResponse> handlerInternalException(ProductNotFoundException ex){
-        CommonResponse commonResponse = new CommonResponse(System.currentTimeMillis(), HttpStatus.NOT_FOUND.value(), ex.getMessage(), ResponseType.Failed);
-        return new ResponseEntity<>(commonResponse, commonUtilities.getCommonHeaders(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<FailureResponse> handlerInternalException(ProductNotFoundException ex){
+        return responseHandler.handleResponse(HttpStatus.NOT_FOUND, ex);
     }
 
     @ExceptionHandler
-    public ResponseEntity<CommonResponse> handleProductAlreadyExistsException(ProductAlreadyExistsException ex){
-        CommonResponse commonResponse = new CommonResponse(System.currentTimeMillis(), HttpStatus.BAD_REQUEST.value(), ex.getMessage(), ResponseType.Failed);
-        return new ResponseEntity<>(commonResponse, commonUtilities.getCommonHeaders(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<FailureResponse> handleProductAlreadyExistsException(ProductAlreadyExistsException ex){
+        return responseHandler.handleResponse(HttpStatus.BAD_REQUEST, ex);
     }
 
     @ExceptionHandler
-    public ResponseEntity<CommonResponse> handleProductBadRequestException(ProductBadRequestException ex){
-        CommonResponse commonResponse = new CommonResponse(System.currentTimeMillis(), HttpStatus.BAD_REQUEST.value(), ex.getMessage(), ResponseType.Failed);
-        return new ResponseEntity<>(commonResponse, commonUtilities.getCommonHeaders(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<FailureResponse> handleProductBadRequestException(ProductBadRequestException ex){
+        return responseHandler.handleResponse(HttpStatus.BAD_REQUEST, ex);
     }
 
 }

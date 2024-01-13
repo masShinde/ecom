@@ -1,21 +1,22 @@
-package com.shopme.ecom.Controllers;
+package com.shopme.ecom.controllers;
 
+import com.shopme.ecom.dto.brandDtos.CreateBrandRequest;
+import com.shopme.ecom.dto.brandDtos.UpdateBrandRequest;
 import com.shopme.ecom.entities.Brand;
-import com.shopme.ecom.entities.CommonResponse;
-import com.shopme.ecom.enums.ResponseType;
+import com.shopme.ecom.entities.SuccessResponse;
 import com.shopme.ecom.services.BrandService;
-import com.shopme.ecom.utils.CommonUtilities;
+import com.shopme.ecom.utils.ResponseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
-@Controller
+@RestController
 @RequestMapping("/api")
 public class BrandController {
 
@@ -23,57 +24,51 @@ public class BrandController {
     private BrandService brandService;
 
     @Autowired
-    private CommonUtilities commonUtilities;
+    private ResponseHandler responseHandler;
 
     @GetMapping("/brands")
-    public ResponseEntity<CommonResponse> getAllBrands(){
-        List<Brand> brands = brandService.getAllBrands();
+    public ResponseEntity<SuccessResponse> getAllBrands(@RequestParam Optional<Integer> pageNum, @RequestParam Optional<Integer> pageSize){
+        List<Brand> brands = brandService.getAllBrands(pageNum, pageSize);
         HashMap<String, List<Brand>> res = new HashMap<>();
         res.put("brands", brands);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Brands Fetched Successfully.", ResponseType.Sucess, res );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Brands Fetched Successfully.");
     }
 
 
     @GetMapping("/brands/{id}")
-    public ResponseEntity<CommonResponse> getBrandById(@PathVariable Integer id){
+    public ResponseEntity<SuccessResponse> getBrandById(@PathVariable Integer id){
         Brand brand = brandService.getBrandById(id);
         HashMap<String, Brand> res = new HashMap<>();
         res.put("brand", brand);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Brand Fetched Successfully.", ResponseType.Sucess, res );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Brand Fetched Successfully.");
     }
 
 
     @PostMapping("/brands")
-    public ResponseEntity<CommonResponse> createNewBrand(@RequestBody Brand newBrand){
+    public ResponseEntity<SuccessResponse> createNewBrand(@RequestBody CreateBrandRequest newBrand){
         Brand brand = brandService.createNewBrand(newBrand);
         HashMap<String, Brand> res = new HashMap<>();
         res.put("brand", brand);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Brand Fetched Successfully.", ResponseType.Sucess, res );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.CREATED, res, "Brand Created Successfully.");
     }
 
     @PutMapping("/brands")
-    public ResponseEntity<CommonResponse> updateBrand(@RequestBody Brand newBrand){
+    public ResponseEntity<SuccessResponse> updateBrand(@RequestBody UpdateBrandRequest newBrand){
         Brand brand = brandService.updateBrand(newBrand);
         HashMap<String, Brand> res = new HashMap<>();
         res.put("brand", brand);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Brand Fetched Successfully.", ResponseType.Sucess, res );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, res, "Brand Updated successfully.");
     }
 
     @PostMapping("/brands/logo")
-    public ResponseEntity<CommonResponse> saveBrandLogo(@RequestParam(name = "file") MultipartFile multipartFile, @RequestParam Integer id){
+    public ResponseEntity<SuccessResponse> saveBrandLogo(@RequestParam(name = "file") MultipartFile multipartFile, @RequestParam Integer id){
         brandService.saveBrandLogo(multipartFile, id);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Brand logo updated Successfully.", ResponseType.Sucess);
-        return new ResponseEntity<>(cr, commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "Brand logo updated Successfully.");
     }
 
     @DeleteMapping("/brands")
-    public ResponseEntity<CommonResponse> deleteBrand(@RequestParam Integer id){
+    public ResponseEntity<SuccessResponse> deleteBrand(@RequestParam Integer id){
         brandService.deleteBrand(id);
-        CommonResponse cr = new CommonResponse(System.currentTimeMillis(), HttpStatus.OK.value(), "Brand Deleted Successfully.", ResponseType.Sucess );
-        return new ResponseEntity<>(cr,  commonUtilities.getCommonHeaders(), HttpStatus.OK);
+        return responseHandler.handleResponse(HttpStatus.OK, null, "Brand Deleted Successfully.");
     }
 }
