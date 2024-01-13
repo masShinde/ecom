@@ -2,12 +2,14 @@ package com.shopme.ecom.entities;
 
 import com.shopme.ecom.enums.ResponseType;
 import jakarta.persistence.Enumerated;
+import lombok.Builder;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 
 @Component
-public class CommonResponse {
+@Builder
+public class SuccessResponse {
 
     private long timestamp;
 
@@ -19,25 +21,6 @@ public class CommonResponse {
     private ResponseType status;
 
     private HashMap<String, ?> data;
-
-    public CommonResponse() {
-    }
-
-    public CommonResponse(long timestamp, int statusCode, String message, ResponseType status) {
-        this.timestamp = timestamp;
-        this.statusCode = statusCode;
-        this.message = message;
-        this.status = status;
-    }
-
-    public CommonResponse(long timestamp, int statusCode, String message, ResponseType status, HashMap<String, ?> data) {
-        this.timestamp = timestamp;
-        this.statusCode = statusCode;
-        this.message = message;
-        this.status = status;
-        this.data = data;
-    }
-
 
     public long getTimestamp() {
         return timestamp;
